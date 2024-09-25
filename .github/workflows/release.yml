@@ -18,7 +18,16 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            artifact_name: matrix-linux
+          - os: windows-latest
+            rid: win-x64
+            artifact_name: matrix-windows.exe
+          - os: macos-latest
+            rid: osx-arm64
+            artifact_name: matrix-macos-arm
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -35,17 +44,16 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
       
-    #- name: Test
-    #  run: dotnet test --no-restore --verbosity normal
-      
     - name: Publish
-      run: dotnet publish -c Release -o publish -r ${{ matrix.os == 'ubuntu-latest' && 'linux-x64' || matrix.os == 'windows-latest' && 'win-x64' || 'osx-arm64' }} /p:PublishSingleFile=true /p:PublishTrimmed=true
+      run: |
+        dotnet publish -c Release -o publish -r ${{ matrix.rid }} /p:PublishSingleFile=true /p:PublishTrimmed=true
+        mv publish/matrix${{ matrix.os == 'windows-latest' && '.exe' || '' }} ${{ matrix.artifact_name }}
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: matrix-${{ matrix.os }}-${{ matrix.os == 'windows-latest' && 'exe' || 'bin' }}
-        path: publish/*
+        name: ${{ matrix.artifact_name }}
+        path: ${{ matrix.artifact_name }}
 
   create-release:
     needs: build
@@ -57,15 +65,15 @@ jobs:
     
     - name: Display structure of downloaded files
       run: ls -R artifacts
-      
+    
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ github.event.inputs.version }}
         name: Release ${{ github.event.inputs.version }}
         files: |
-          artifacts/matrix-ubuntu-latest-bin/*
-          artifacts/matrix-windows-latest-exe/*
-          artifacts/matrix-macos-latest-bin/*
+          artifacts/matrix-linux/matrix-linux
+          artifacts/matrix-windows.exe/matrix-windows.exe
+          artifacts/matrix-macos-arm/matrix-macos-arm
         draft: false
         prerelease: false
