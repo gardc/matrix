@@ -44,24 +44,28 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
-        name: matrix-${{ matrix.os }}
-        path: publish
+        name: matrix-${{ matrix.os }}-${{ matrix.os == 'windows-latest' && 'exe' || 'bin' }}
+        path: publish/*
 
   create-release:
     needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v3
+      with:
+        path: artifacts
     
+    - name: Display structure of downloaded files
+      run: ls -R artifacts
+      
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ github.event.inputs.version }}
         name: Release ${{ github.event.inputs.version }}
         files: |
-          matrix-ubuntu-latest/*
-          matrix-windows-latest/*
-          matrix-macos-latest/*
+          artifacts/matrix-ubuntu-latest-bin/*
+          artifacts/matrix-windows-latest-exe/*
+          artifacts/matrix-macos-latest-bin/*
         draft: false
         prerelease: false
-
