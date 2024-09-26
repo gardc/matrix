@@ -6,6 +6,8 @@ Very simple Matrix Rain project 👾
 
 This fun little test project creates a Matrix-like animation in your console window, reminiscent of the iconic "digital rain" from The Matrix films. It's a fun way for me to test .NET 9 release candidate in a minimal way, using the `System.CommandLine` package. Should be cross platform, but tested on macOS Sequoia.
 
+![screenshot](./img/ss.png)
+
 ## ✨ What is this?
 
 - 🌧️ Simulates the "digital rain" effect
